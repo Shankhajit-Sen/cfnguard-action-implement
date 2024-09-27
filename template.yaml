@@ -1,0 +1,198 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Description: >-
+  Creates the Example service's DynamoDB Task table, and associated global secondary indexes.
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Resource Management
+        Parameters:
+          - Name
+          - Owner
+          - Project
+
+      - Label:
+          default: DynamoDB
+        Parameters:
+          - TaskTenantGSIName
+
+Parameters:
+  Name:
+    Type: String
+    Description: >-
+      A String that can be used to Identify Resources created by this Template.
+      Resources may use this Parameter when creating the Name Tag. The Name Tag
+      is commonly used by the AWS Console to provide a friendlier name to
+      Resources. This may be used to form part of a Name Tag.
+
+  Owner:
+    Type: String
+    Description: >-
+      The email address for the Team that owns the Resources created by this
+      Template.
+    AllowedPattern: ^.*@evertz\.(io|com|tv)$
+    ConstraintDescription: Must be an evertz.com,.io or .tv email address
+
+  Project:
+    Type: String
+    Description: >-
+      The name of the Project that the Resources created by this Template
+      belong to. A Team may own many Projects.
+
+  TaskTenantGSIName:
+    Type: String
+    Description: The name assigned to the Task tables Global Secondary Index for Status Lookups.
+    Default: "TaskStatusGSI"
+    MaxLength: 150
+
+  NotificationTopic:
+    Type: String
+    Description: The notification topic alerts should be sent to.
+
+Resources:
+
+  TaskDBTable:
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Join ['-', [!Ref "Project", "task"]]
+      AttributeDefinitions:
+        - AttributeName: "id"
+          AttributeType: "S"
+        - AttributeName: "tenant"
+          AttributeType: "S"
+        - AttributeName: "updated_at"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "id"
+          KeyType: "HASH"
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      GlobalSecondaryIndexes:
+        - IndexName: !Join ['-', [!Ref "Project", !Ref "TaskTenantGSIName"]]
+          KeySchema:
+            - AttributeName: tenant
+              KeyType: HASH
+            - AttributeName: updated_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
+      DeletionProtectionEnabled: True
+      Tags:
+        - Key: Name
+          Value: !Ref Name
+        - Key: Owner
+          Value: !Ref Owner
+        - Key: Project
+          Value: !Ref Project
+        - Key: Group
+          Value: evertz.io
+
+
+# Dynamo metric driven alarms.
+# Although we have autoscaling it would be useful to know of events where we have insufficient capacity.  This may be because we aren't scaling quickly enough, or that the have very bursty usage patterns.
+
+  TableReadCapacityWarning:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: !Join [" ", [!Ref 'Project' ,'Task table read capacity alarm']]
+      ActionsEnabled: true
+      AlarmActions:
+        - Ref: NotificationTopic
+      Namespace: AWS/DynamoDB
+      MetricName: "ReadThrottleEvents"
+      Dimensions:
+      - Name: "TableName"
+        Value: !Ref TaskDBTable
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      Period: 60
+      EvaluationPeriods: 3
+      Statistic: Maximum
+
+  TableWriteCapacityWarning:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: !Join [" ", [!Ref 'Project' ,'Task table write capacity alarm']]
+      ActionsEnabled: true
+      AlarmActions:
+        - Ref: NotificationTopic
+      Namespace: AWS/DynamoDB
+      MetricName: "WriteThrottleEvents"
+      Dimensions:
+      - Name: "TableName"
+        Value: !Ref TaskDBTable
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      Period: 60
+      EvaluationPeriods: 3
+      Statistic: Maximum
+
+  TableIndexReadCapacityWarning:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: !Join [" ", [!Ref 'Project' ,'Task table status index read capacity alarm']]
+      ActionsEnabled: true
+      AlarmActions:
+        - Ref: NotificationTopic
+      Namespace: "AWS/DynamoDB"
+      MetricName: "ReadThrottleEvents"
+      Dimensions:
+      - Name: "TableName"
+        Value: !Ref TaskDBTable
+      - Name: "GlobalSecondaryIndexName"
+        Value: !Join ['-', [!Ref "Project", !Ref "TaskTenantGSIName"]]
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      Period: 60
+      EvaluationPeriods: 3
+      Statistic: Maximum
+
+  TableIndexWriteCapacityWarning:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: !Join [" ", [!Ref 'Project' ,'Task table status index write capacity alarm']]
+      ActionsEnabled: true
+      AlarmActions:
+        - Ref: NotificationTopic
+      Namespace: "AWS/DynamoDB"
+      MetricName: "WriteThrottleEvents"
+      Dimensions:
+      - Name: "TableName"
+        Value: !Ref TaskDBTable
+      - Name: "GlobalSecondaryIndexName"
+        Value: !Join ['-', [!Ref "Project", !Ref "TaskTenantGSIName"]]
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      Period: 60
+      EvaluationPeriods: 5 # NOTE - It is acceptable for the index to lag behind slightly, but we want to ensure that we have sufficient throughput for it to recover in a timely fashion.
+      Statistic: Maximum
+
+
+Outputs:
+
+  TaskDBTableName:
+    Description: The name of the DynamoDB Task Table
+    Value: !Ref TaskDBTable
+
+  TaskDBTableARN:
+    Description: The ARN of the DynamoDB Task Table
+    Value: !GetAtt TaskDBTable.Arn
+
+  TaskTenantGSIName:
+    Description: The name of the task table GSI used to perform order returns of in process tasks.
+    Value: !Join ['-', [!Ref "Project", !Ref "TaskTenantGSIName"]]
+
+  StreamArn:
+    Description: The Stream ARN of the DynamoDB Task Table
+    Value: !GetAtt TaskDBTable.StreamArn
+
