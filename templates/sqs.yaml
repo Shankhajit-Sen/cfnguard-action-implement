@@ -1,0 +1,135 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Description: >-
+  Creates the Example service's SQS Queues.
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Resource Management
+        Parameters:
+          - Project
+      - Label:
+          default: SQS
+        Parameters:
+          - MessageRetentionPeriod
+          - DeadLetterRetentionPeriod
+          - VisibilityTimeout
+          - MaxReceiveCount
+
+
+Parameters:
+  Project:
+    Type: String
+    Description: >-
+      The name of the Project that the Resources created by this Template
+      belong to. A Team may own many Projects.
+
+  MessageRetentionPeriod:
+    Type: Number
+    Description: >-
+      The number of seconds messages should be retained for Default: 1036800 (12 Days)
+    Default: 1036800 # 12 Days
+
+  DeadLetterRetentionPeriod:
+    Type: Number
+    Description: >-
+      The number of seconds messages should be retained in the dead letter
+      queue for. This should be longer than the message retention of the main
+      queue, see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html
+      Default: 1209600 (14 Days)
+    Default: 1209600 # 14 Days
+
+  VisibilityTimeout:
+    Type: Number
+    Description: >-
+      The initial visibility timeout set for messages upon consumption.
+    Default: 30
+
+  MaxReceiveCount:
+    Type: Number
+    Description: >-
+      The number of times a message should be delivered before being routed to the dead letter queue.
+    Default: 3
+
+  NotificationTopic:
+    Type: String
+    Description: The notification topic alerts should be sent to.
+
+  StateReconciliationTopic:
+    Type: String
+    Description: The topic used to trigger a reconciliation lambda.
+
+
+Resources:
+
+  FailedTaskQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      MessageRetentionPeriod: !Ref DeadLetterRetentionPeriod
+      QueueName: !Join ["-", [!Ref "Project" ,'FailedTaskQueue']]
+      ReceiveMessageWaitTimeSeconds: 0
+      VisibilityTimeout: !Ref VisibilityTimeout
+
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      MessageRetentionPeriod: !Ref MessageRetentionPeriod
+      QueueName: !Join ["-", [!Ref "Project" ,'Queue']]
+      ReceiveMessageWaitTimeSeconds: 0
+      VisibilityTimeout: !Ref VisibilityTimeout
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt FailedTaskQueue.Arn
+        maxReceiveCount: !Ref MaxReceiveCount
+
+  UnprocessableTasksAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: !Join [" ", [!Ref 'Project' ,'Unprocessable tasks alarm']]
+      ActionsEnabled: true
+      AlarmActions:
+        - Ref: NotificationTopic
+        - Ref: StateReconciliationTopic
+      Dimensions:
+      - Name: "QueueName"
+        Value: !GetAtt FailedTaskQueue.QueueName
+      MetricName: "ApproximateNumberOfMessagesVisible"
+      Namespace: "AWS/SQS"
+      ComparisonOperator: "GreaterThanThreshold"
+      Threshold: 0
+      Period: 300
+      EvaluationPeriods: 1
+      Statistic: "Maximum"
+
+
+Outputs:
+
+  FailedTaskQueueURL:
+    Description: The URL of the FailedTaskQueue
+    Value: !Ref FailedTaskQueue
+
+  FailedTaskQueueARN:
+    Description: The ARN of the FailedTaskQueue
+    Value: !GetAtt FailedTaskQueue.Arn
+
+  FailedTaskQueueName:
+    Description: The Name of the FailedTaskQueue
+    Value: !GetAtt FailedTaskQueue.QueueName
+
+  QueueURL:
+    Description: The URL of the Queue
+    Value: !Ref Queue
+
+  QueueARN:
+    Description: The ARN of the Queue
+    Value: !GetAtt Queue.Arn
+
+  QueueName:
+    Description: The Name of the Queue
+    Value: !GetAtt Queue.QueueName

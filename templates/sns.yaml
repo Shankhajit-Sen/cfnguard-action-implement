@@ -1,0 +1,48 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Description: >-
+  Creates the Example service's SNS Topics.
+
+
+Resources:
+  OperationalNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Operational Alerts for the Render Service
+      # Not specifying a topic name - "If you specify a name, you cannot perform updates that require replacement of this resource. You can perform updates that require no or some interruption. If you must replace the resource, specify a new name."
+
+  StateReconciliationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: State Reconciliation trigger for unprocessable messages
+      # Not specifying a topic name - "If you specify a name, you cannot perform updates that require replacement of this resource. You can perform updates that require no or some interruption. If you must replace the resource, specify a new name."
+
+  EventsSNSTopic:
+    Type: AWS::SNS::Topic
+
+Outputs:
+  OperationalNotificationTopicARN:
+    Description: The topic used for opperational alerts for the render service
+    Value: !Ref OperationalNotificationTopic
+
+  OperationalNotificationTopicName:
+    Description: The topic used for opperational alerts for the render service
+    Value: !GetAtt OperationalNotificationTopic.TopicName
+
+  StateReconciliationTopicARN:
+    Description: The topic used to reconcile the state of unprocessable tasks
+    Value: !Ref StateReconciliationTopic
+
+  StateReconciliationTopicName:
+    Description: The topic used to reconcile the state of unprocessable tasks
+    Value: !GetAtt StateReconciliationTopic.TopicName
+
+  EventsSNSTopicARN:
+    Description: The topic used for operational alerts for the DynamoDB stream
+    Value: !Ref EventsSNSTopic
+
+  EventsSNSTopicName:
+    Description: The topic used for operational alerts for the DynamoDB stream
+    Value: !GetAtt EventsSNSTopic.TopicName
