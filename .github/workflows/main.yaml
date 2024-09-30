@@ -15,6 +15,15 @@ jobs:
       contents: read
       checks: write
 
-    steps:      
+    steps:  
+      - name: Checkout implementation repo
+        uses: actions/checkout@v3
+      - name: Debug Paths
+        run: |
+          echo "Rules path: ${{ inputs.rules }}"
+          echo "Data path: ${{ inputs.data }}"
       - name: Check cfn-guard rules
         uses: Shankhajit-Sen/cfnguard-action/guard-actions@v1
+        with:
+          rules: './rules' # Path to the rules in the cfnguard-action repo
+          data: './templates'  
