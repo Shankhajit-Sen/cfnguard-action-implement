@@ -17,4 +17,4 @@ jobs:
 
     steps:      
       - name: Check cfn-guard rules
-        uses: cfnguard-action/guard-actions@v1
+        uses: Shankhajit-Sen/cfnguard-action/guard-actions@v1
