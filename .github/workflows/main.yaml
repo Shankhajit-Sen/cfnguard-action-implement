@@ -25,9 +25,8 @@ jobs:
           path: "cfnguard-action/guard-actions@v1"
       - name: Debug Paths
         run: |
-          echo "Rules path: ${{ inputs.rules }}"
-          echo "Data path: ${{ inputs.data }}"
+          echo "Data path: ${{ github.workspace }}/templates
       - name: Check cfn-guard rules
         uses: Shankhajit-Sen/cfnguard-action/guard-actions@v1
         with: # Path to the rules in the cfnguard-action repo
-          data: "./templates"
+          data: './templates'
