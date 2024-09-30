@@ -18,6 +18,11 @@ jobs:
     steps:  
       - name: Checkout implementation repo
         uses: actions/checkout@v3
+      - name: Checkout cfnguard-action repo
+        uses: actions/checkout@v3
+        with:
+          repository: Shankhajit-Sen/cfnguard-action
+          path: 'cfnguard-action/guard-actions@v1'
       - name: Debug Paths
         run: |
           echo "Rules path: ${{ inputs.rules }}"
