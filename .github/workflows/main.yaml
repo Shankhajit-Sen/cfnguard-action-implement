@@ -1,0 +1,20 @@
+name: Cfn-guard scan
+
+on:
+  pull_request:
+    paths:
+      - "templates/**"
+      - "*.yml"
+
+jobs:
+  cfn-guard:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      checks: write
+
+    steps:      
+      - name: Check cfn-guard rules
+        uses: cfnguard-action/guard-actions@v1
