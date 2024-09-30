@@ -27,6 +27,6 @@ jobs:
         run: |
           echo "Data path: ${{ github.workspace }}/templates"
       - name: Check cfn-guard rules
-        uses: Shankhajit-Sen/cfnguard-action/guard-actions@v1
+        uses: Shankhajit-Sen/cfnguard-action/guard-actions@v2
         with: # Path to the rules in the cfnguard-action repo
           data: './templates'
