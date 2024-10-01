@@ -16,17 +16,25 @@ jobs:
       checks: write
 
     steps:
+      # Step 1: Checkout the implementation repository (templates will be here)
       - name: Checkout implementation repo
         uses: actions/checkout@v3
+
+      # Step 2: Checkout the `cfnguard-action` repository (where rules exist)
       - name: Checkout cfnguard-action repo
         uses: actions/checkout@v3
         with:
           repository: Shankhajit-Sen/cfnguard-action
-          path: "cfnguard-action/guard-actions@v1"
+          path: cfnguard-action  # This checks out the repository into the cfnguard-action folder
+
+      # Step 3: Debug to check if paths are correct
       - name: Debug Paths
         run: |
           echo "Data path: ${{ github.workspace }}/templates"
+          echo "Rules path: ${{ github.workspace }}/cfnguard-action/rules"
+
+      # Step 4: Run CFN-Guard scan (use rules from `cfnguard-action` and templates from implementation repo)
       - name: Check cfn-guard rules
-        uses: Shankhajit-Sen/cfnguard-action/guard-actions@v2
-        with: # Path to the rules in the cfnguard-action repo
-          data: './templates'
+        uses: ./cfnguard-action/guard-actions  # This references the action from `cfnguard-action`
+        with:
+          data: './templates'                   # Path to the templates from the implementation repo
