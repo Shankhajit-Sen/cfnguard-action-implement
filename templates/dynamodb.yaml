@@ -5,7 +5,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   Creates the Example service's DynamoDB Task table, and associated global secondary indexes.
 
-
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:

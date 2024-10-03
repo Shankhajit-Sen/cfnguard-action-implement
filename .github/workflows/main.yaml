@@ -15,6 +15,24 @@ jobs:
       contents: read
       checks: write
 
-    steps:      
+    steps:
+      # Step 1: Checkout the implementation repository
+      # - name: Checkout implementation repo
+      #   uses: actions/checkout@v3
+
+      # Step 2: Checkout the `cfnguard-action` repository
+      - name: Checkout cfnguard-action repo
+        uses: actions/checkout@v3
+        with:
+          repository: Shankhajit-Sen/cfnguard-action
+          path: cfnguard-action
+
+      - name: Debug Paths
+        run: |
+          echo "Data path: ${{ github.workspace }}/templates"
+          echo "Rules path: ${{ github.workspace }}/cfnguard-action/rules"
+
       - name: Check cfn-guard rules
-        uses: cfnguard-action/guard-actions@v1
+        uses: ./cfnguard-action/guard-actions
+        with:
+          data: './templates'
