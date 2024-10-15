@@ -9,6 +9,11 @@ on:
 jobs:
   cfn-guard:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      security-events: write
+      actions: read
+      contents: read
 
     steps:
       - name: Checkout implementation repo
