@@ -16,11 +16,11 @@ jobs:
       checks: write
 
     steps:
-      # Step 1: Checkout the implementation repository
-      # - name: Checkout implementation repo
-      #   uses: actions/checkout@v3
+      Step 1: Checkout the implementation repository
+      - name: Checkout implementation repo
+        uses: actions/checkout@v3
 
-      # Step 2: Checkout the `cfnguard-action` repository
+      Step 2: Checkout the `cfnguard-action` repository
       - name: Checkout cfnguard-action repo
         uses: actions/checkout@v3
         with:
