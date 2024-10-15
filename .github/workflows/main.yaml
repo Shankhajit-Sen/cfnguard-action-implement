@@ -9,11 +9,6 @@ on:
 jobs:
   cfn-guard:
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-      checks: write
 
     steps:
       - name: Checkout implementation repo
@@ -24,10 +19,10 @@ jobs:
           repository: Shankhajit-Sen/cfnguard-action
           path: cfnguard-action
 
-      # - name: Debug Paths
-      #   run: |
-      #     echo "Data path: ${{ github.workspace }}/templates"
-      #     echo "Rules path: ${{ github.workspace }}/cfnguard-action/rules"
+      - name: Debug Paths
+        run: |
+          echo "Data path: ${{ github.workspace }}/templates"
+          echo "Rules path: ${{ github.workspace }}/cfnguard-action/rules"
       - name: Debug Workspace
         run: |
           echo "Listing files in the workspace:"
