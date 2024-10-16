@@ -10,11 +10,39 @@ jobs:
   cfn-guard:
     runs-on: ubuntu-latest
     permissions:
+      pull-requests: write
       security-events: write
       actions: read
       contents: read
-      checks: write
 
-    steps:      
+    steps:
+      - name: Checkout implementation repo
+        uses: actions/checkout@v3
+      # - name: Checkout cfnguard-action repo
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: Shankhajit-Sen/cfnguard-action
+      #     path: cfnguard-action
+
+      # - name: Debug Paths
+      #   run: |
+      #     echo "Data path: ${{ github.workspace }}/templates"
+      #     echo "Rules path: ${{ github.workspace }}/cfnguard-action/rules"
+      - name: Debug Workspace
+        run: |
+          echo "Listing files in the workspace:"
+          ls -al "${{ github.workspace }}"
+        shell: bash
+          
+      # - name: Debug Rules Directory
+      #   run: |
+      #     echo "Listing files in the cfnguard-action rules directory:"
+      #     ls -al "${{ github.workspace }}/cfnguard-action/rules"
+      #   shell: bash
+
+
       - name: Check cfn-guard rules
-        uses: cfnguard-action/guard-actions@v1
+        uses: ./cfnguard-action/guard-actions
+        with:
+          rules: './rules'
+          data: './templates'
