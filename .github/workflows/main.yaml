@@ -24,21 +24,21 @@ jobs:
       #     repository: Shankhajit-Sen/cfnguard-action
       #     path: cfnguard-action
 
-      - name: Debug Paths
-        run: |
-          echo "Data path: ${{ github.workspace }}/templates"
-          echo "Rules path: ${{ github.workspace }}/cfnguard-action/rules"
+      # - name: Debug Paths
+      #   run: |
+      #     echo "Data path: ${{ github.workspace }}/templates"
+      #     echo "Rules path: ${{ github.workspace }}/cfnguard-action/rules"
       - name: Debug Workspace
         run: |
           echo "Listing files in the workspace:"
           ls -al "${{ github.workspace }}"
         shell: bash
           
-      - name: Debug Rules Directory
-        run: |
-          echo "Listing files in the cfnguard-action rules directory:"
-          ls -al "${{ github.workspace }}/cfnguard-action/rules"
-        shell: bash
+      # - name: Debug Rules Directory
+      #   run: |
+      #     echo "Listing files in the cfnguard-action rules directory:"
+      #     ls -al "${{ github.workspace }}/cfnguard-action/rules"
+      #   shell: bash
 
 
       - name: Check cfn-guard rules
